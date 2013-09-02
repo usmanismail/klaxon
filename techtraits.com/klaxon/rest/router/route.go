@@ -2,6 +2,9 @@ package router
 
 import (
 	"techtraits.com/log"
+	"strings"
+	"regexp"
+	"net/http"
 )
 
 type Method int;
@@ -38,41 +41,80 @@ type Route struct {
     //	A map of path parameters,
     //	A map of query string paramters
     // 	A map of headers  
-    Handler func(Route, map[string]string, map[string]string, map[string]string)
+    Handler func(Route, map[string]string, map[string]string, http.Header)
     
     
 }
 //Check if the given route and the current route match. 
 func (this *Route) matchConsumes(route Route)bool {
-	for _, thisConsumes := range this.Consumes {
-		for _, routeConsumes := range Route.Consumes {
-			if thisConsumes == routeConsumes {
-				return true;
+if this.Consumes == nil {
+		return true;
+	} else {
+		for _, thisConsumes := range this.Consumes {
+			for _, routeConsumes := range route.Consumes {
+				if thisConsumes == routeConsumes {
+					return true;
+				}
 			}
 		}
+		
+		return false;
 	}
-	
-	return false;
 }
 
 //Check if the given route and the current route match. 
 func (this *Route) matchProduces(route Route)bool {
-	for _, thisProduces := range this.Produces {
-		for _, routeProduces := range Route.Produces {
-			if thisProduces == routeProduces {
-				return true;
+	if this.Produces == nil {
+		return true;
+	} else {
+		for _, thisProduces := range this.Produces {
+			for _, routeProduces := range route.Produces {
+				if thisProduces == routeProduces {
+					return true;
+				}
 			}
 		}
+		return false;
 	}
-	return false;
 }
 
 //Check if the given route and the current route match. 
-func (this *Route) matchRoute(route Route)bool {
-	bool matchMethod := this.Method == route.Method
-	bool matchConsumes := this.matchConsumes(route);
-	bool matchProduces := this.matchProduces(route);
-	return true
+func (this *Route) parseUri(route Route) (match bool, pathParams map[string]string) {
+	
+	//Trim trailing slash if it exits
+	var trailingSlash , _ = regexp.MatchString(".*/$",route.Path)
+	if  trailingSlash {
+		route.Path = route.Path[0:len(route.Path)-1]
+	}
+	
+	pathParams = make(map[string]string)
+	var thisPathTokens = strings.Split(this.Path[1:], "/")
+	var routePathTokens = strings.Split(route.Path[1:], "/")
+	
+	match = true
+	if len(thisPathTokens) != len(routePathTokens) {
+		match = false
+	} else {
+		for i :=0; i < len(thisPathTokens) ; i++  {
+		
+			match, _ = regexp.MatchString("^{.*}$",thisPathTokens[i])
+			if match {
+				pathParams[thisPathTokens[i][1:len(thisPathTokens[i])-1]]=routePathTokens[i]	
+			} else if thisPathTokens[i] == routePathTokens[i] {
+			} else {
+				return
+			}	
+		}
+	}
+	return
+}
+
+
+
+//Check if the given route and the current route match. 
+func (this *Route) matchRoute(route Route) (bool, map[string]string) {
+	var matchUri, pathParams = this.parseUri(route)
+	return ((this.Method == route.Method) && this.matchConsumes(route) && this.matchProduces(route) && matchUri), pathParams
 }
 
 //Converts a string representation of the method type into the internal constant
