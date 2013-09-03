@@ -5,6 +5,7 @@ import (
 	"strings"
 	"regexp"
 	"net/http"
+	"net/url"
 )
 
 type Method int;
@@ -41,16 +42,16 @@ type Route struct {
     //	A map of path parameters,
     //	A map of query string paramters
     // 	A map of headers  
-    Handler func(Route, map[string]string, map[string]string, http.Header)
+    Handler func(Route, map[string]string, url.Values, http.Header)
     
     
 }
 //Check if the given route and the current route match. 
 func (this *Route) matchConsumes(route Route)bool {
-if this.Consumes == nil {
+	if this.Consumes == nil {
 		return true;
 	} else {
-		for _, thisConsumes := range this.Consumes {
+		for _, thisConsumes := range this.Consumes { 
 			for _, routeConsumes := range route.Consumes {
 				if thisConsumes == routeConsumes {
 					return true;
@@ -80,7 +81,6 @@ func (this *Route) matchProduces(route Route)bool {
 
 //Check if the given route and the current route match. 
 func (this *Route) parseUri(route Route) (match bool, pathParams map[string]string) {
-	
 	//Trim trailing slash if it exits
 	var trailingSlash , _ = regexp.MatchString(".*/$",route.Path)
 	if  trailingSlash {
@@ -91,17 +91,18 @@ func (this *Route) parseUri(route Route) (match bool, pathParams map[string]stri
 	var thisPathTokens = strings.Split(this.Path[1:], "/")
 	var routePathTokens = strings.Split(route.Path[1:], "/")
 	
-	match = true
+	match = true	
+	
 	if len(thisPathTokens) != len(routePathTokens) {
 		match = false
 	} else {
 		for i :=0; i < len(thisPathTokens) ; i++  {
-		
-			match, _ = regexp.MatchString("^{.*}$",thisPathTokens[i])
-			if match {
+			var regexMatch, _ = regexp.MatchString("^{.*}$",thisPathTokens[i])
+			if regexMatch {
 				pathParams[thisPathTokens[i][1:len(thisPathTokens[i])-1]]=routePathTokens[i]	
 			} else if thisPathTokens[i] == routePathTokens[i] {
 			} else {
+				match = false
 				return
 			}	
 		}
@@ -115,6 +116,7 @@ func (this *Route) parseUri(route Route) (match bool, pathParams map[string]stri
 func (this *Route) matchRoute(route Route) (bool, map[string]string) {
 	var matchUri, pathParams = this.parseUri(route)
 	return ((this.Method == route.Method) && this.matchConsumes(route) && this.matchProduces(route) && matchUri), pathParams
+	
 }
 
 //Converts a string representation of the method type into the internal constant
