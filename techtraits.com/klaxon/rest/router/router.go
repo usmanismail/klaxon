@@ -14,17 +14,27 @@ var routes []Route
 // Registers a new handler
 // Will check that it does not conflict with a route that is already configured
 func Register(path string, method Method, consumes []string, produces []string, 
-		handler func(Route, map[string]string, url.Values, http.Header)) {
-	log.Debug("Route Registered: " + path)
+		handler func(Route, map[string]string, url.Values, http.Header))bool {
+	
 	
 	//Trim trailing slash if it exits
-	var trailingSlash , _ = regexp.MatchString(".*/$",path)
+	var trailingSlash , _ = regexp.MatchString(".*/$", path)
 	if  trailingSlash {
 		path = path[0:len(path)-1]
 	}
 	
-	route := Route{path, method, consumes, produces, handler}
-    routes = append(routes, route)
+	regRoute := Route{path, method, consumes, produces, handler}
+	for _, route := range routes {
+		var match, _ = route.matchRoute(regRoute)
+		if match {
+			log.Error("Route %v already Registered, ignoring ",  regRoute)
+			return false
+		}
+	}
+	
+	log.Debug("Route %v Registered." , regRoute)
+    routes = append(routes, regRoute)
+    return true
 }
 
 func init() { 
