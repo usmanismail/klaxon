@@ -1,11 +1,11 @@
 package router
 
 import (
-   	"net/http"
-   	"techtraits.com/log"
-   	"net/url"
-   	"strings"
-   	"regexp"
+	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
+	"techtraits.com/log"
 )
 
 //A set of routes configured for this application
@@ -13,47 +13,46 @@ var routes []Route
 
 // Registers a new handler
 // Will check that it does not conflict with a route that is already configured
-func Register(path string, method Method, consumes []string, produces []string, 
-		handler func(Route, map[string]string, url.Values, http.Header))bool {
-	
-	
+func Register(path string, method Method, consumes []string, produces []string,
+	handler func(Route, map[string]string, url.Values, http.Header)) bool {
+
 	//Trim trailing slash if it exits
-	var trailingSlash , _ = regexp.MatchString(".*/$", path)
-	if  trailingSlash {
-		path = path[0:len(path)-1]
+	var trailingSlash, _ = regexp.MatchString(".*/$", path)
+	if trailingSlash {
+		path = path[0 : len(path)-1]
 	}
-	
+
 	regRoute := Route{path, method, consumes, produces, handler}
 	for _, route := range routes {
 		var match, _ = route.matchRoute(regRoute)
 		if match {
-			log.Error("Route %v already registered, ignoring ",  regRoute)
+			log.Error("Route %v already registered, ignoring ", regRoute)
 			return false
 		}
 	}
-	
-	log.Debug("Route %v registered." , regRoute)
-    routes = append(routes, regRoute)
-    return true
+
+	log.Debug("Route %v registered.", regRoute)
+	routes = append(routes, regRoute)
+	return true
 }
 
-func init() { 
-    http.HandleFunc("/", handler)
+func init() {
+	http.HandleFunc("/", handler)
 }
 
 //Handles all incomming requests and routes them to registered handlers
 func handler(resp http.ResponseWriter, req *http.Request) {
-	
-	reqRoute := Route{req.URL.Path, ToMethod(req.Method), strings.Split(strings.Split(req.Header.Get("Content-Type"),";")[0],","), 
-			strings.Split(strings.Split(req.Header.Get("Accept"),";")[0],","), nil}
+
+	reqRoute := Route{req.URL.Path, ToMethod(req.Method), strings.Split(strings.Split(req.Header.Get("Content-Type"), ";")[0], ","),
+		strings.Split(strings.Split(req.Header.Get("Accept"), ";")[0], ","), nil}
 	for _, route := range routes {
 		var match, pathParams = route.matchRoute(reqRoute)
-		if match {			
+		if match {
 			req.ParseForm()
-			route.Handler(route, pathParams, req.Form, req.Header);
+			route.Handler(route, pathParams, req.Form, req.Header)
 			return
 		}
 	}
-	
+
 	http.Error(resp, "Resource not found", http.StatusNotFound)
 }

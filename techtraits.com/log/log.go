@@ -1,37 +1,37 @@
 package log
 
 import (
-   	"log"
+	"log"
 )
 
 func Info(logMessage string, v ...interface{}) {
 	if v != nil {
-		log.Printf("[INFO]  "+ logMessage, v)
+		log.Printf("[INFO]  "+logMessage, v)
 	} else {
-		log.Printf("[INFO]  "+ logMessage)
-	} 
+		log.Printf("[INFO]  " + logMessage)
+	}
 }
 
 func Debug(logMessage string, v ...interface{}) {
 	if v != nil {
-		log.Printf("[DEBUG]  "+ logMessage, v)
+		log.Printf("[DEBUG]  "+logMessage, v)
 	} else {
-		log.Printf("[DEBUG]  "+ logMessage)
+		log.Printf("[DEBUG]  " + logMessage)
 	}
 }
 
 func Warn(logMessage string, v ...interface{}) {
 	if v != nil {
-		log.Printf("[WARN]  "+ logMessage, v)
+		log.Printf("[WARN]  "+logMessage, v)
 	} else {
-		log.Printf("[WARN]  "+ logMessage)
-	} 
+		log.Printf("[WARN]  " + logMessage)
+	}
 }
 
 func Error(logMessage string, v ...interface{}) {
 	if v != nil {
-		log.Printf("[ERROR]  "+ logMessage, v)
+		log.Printf("[ERROR]  "+logMessage, v)
 	} else {
-		log.Printf("[ERROR]  "+ logMessage)
-	} 
+		log.Printf("[ERROR]  " + logMessage)
+	}
 }
