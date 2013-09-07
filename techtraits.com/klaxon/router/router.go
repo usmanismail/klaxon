@@ -27,12 +27,12 @@ func Register(path string, method Method, consumes []string, produces []string,
 	for _, route := range routes {
 		var match, _ = route.matchRoute(regRoute)
 		if match {
-			log.Error("Route %v already Registered, ignoring ",  regRoute)
+			log.Error("Route %v already registered, ignoring ",  regRoute)
 			return false
 		}
 	}
 	
-	log.Debug("Route %v Registered." , regRoute)
+	log.Debug("Route %v registered." , regRoute)
     routes = append(routes, regRoute)
     return true
 }
