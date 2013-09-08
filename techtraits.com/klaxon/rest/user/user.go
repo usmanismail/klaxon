@@ -1,5 +1,7 @@
 package user
 
+const USER_KEY string = "USER"
+
 type User struct {
 
 	// Must be unique
@@ -9,8 +11,9 @@ type User struct {
 	Projects []string
 
 	// A hash of the password for this user
-	PasswordHash string
+	// Tagged to make it not serialize in responses
+	PasswordHash string `json:"-"`
 
 	// Is the user an admin
-	isAdmin bool
+	IsAdmin bool
 }

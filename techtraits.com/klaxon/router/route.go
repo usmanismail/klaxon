@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"techtraits.com/log"
@@ -38,12 +37,7 @@ type Route struct {
 	Produces []string
 
 	//The Handler function to be called when a route is matched.
-	// It returns:
-	//	The Matched route
-	//	A map of path parameters,
-	//	A map of query string paramters
-	// 	A map of headers
-	Handler func(Route, map[string]string, url.Values, http.Header)
+	Handler func(request Request)
 }
 
 //Check if the given route and the current route match.

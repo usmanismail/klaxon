@@ -1,8 +1,6 @@
 package project
 
 import (
-	"net/http"
-	"net/url"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
 )
@@ -14,19 +12,19 @@ func init() {
 }
 
 //Get all projects
-func getProjects(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getProjects(request router.Request) {
 
 	log.Info("Get Project")
 }
 
 //Create/Update a project
-func postProject(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func postProject(request router.Request) {
 
 	log.Info("Post Project")
 }
 
 //Get a specific project
-func getProject(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getProject(request router.Request) {
 
 	log.Info("Get Project")
 }

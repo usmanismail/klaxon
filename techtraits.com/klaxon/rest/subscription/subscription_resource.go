@@ -1,8 +1,6 @@
 package subscription
 
 import (
-	"net/http"
-	"net/url"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
 )
@@ -14,19 +12,19 @@ func init() {
 }
 
 //Get all subscriptions for a given project
-func getSubscriptions(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getSubscriptions(request router.Request) {
 
 	log.Info("Get Subscriptions")
 }
 
 //Create/Update an subscription for the given project
-func postSubscription(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func postSubscription(request router.Request) {
 
 	log.Info("Post Subscription")
 }
 
 //Get a specific subscription for a project
-func getSubscription(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getSubscription(request router.Request) {
 
 	log.Info("Get Subscription")
 }

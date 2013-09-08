@@ -1,8 +1,6 @@
 package alert
 
 import (
-	"net/http"
-	"net/url"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
 )
@@ -14,19 +12,19 @@ func init() {
 }
 
 //Get all alerts for a given project
-func getAlerts(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getAlerts(request router.Request) {
 
 	log.Info("Get Alerts")
 }
 
 //Create/Update an alert for the given project
-func postAlert(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func postAlert(request router.Request) {
 
 	log.Info("Post Alert")
 }
 
 //Get a specific alert for a project
-func getAlert(route router.Route, pathParams map[string]string, queryParams url.Values, headers http.Header) {
+func getAlert(request router.Request) {
 
 	log.Info("Get Alert")
 }

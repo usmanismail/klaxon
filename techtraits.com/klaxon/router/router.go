@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"techtraits.com/log"
@@ -14,7 +13,7 @@ var routes []Route
 // Registers a new handler
 // Will check that it does not conflict with a route that is already configured
 func Register(path string, method Method, consumes []string, produces []string,
-	handler func(Route, map[string]string, url.Values, http.Header)) bool {
+	handler func(Request)) bool {
 
 	//Trim trailing slash if it exits
 	var trailingSlash, _ = regexp.MatchString(".+/$", path)
@@ -52,7 +51,7 @@ func handler(resp http.ResponseWriter, req *http.Request) {
 		var match, status, pathParams, message = route.matchRoute(reqRoute)
 		if match && status == http.StatusOK {
 			req.ParseForm()
-			route.Handler(route, pathParams, req.Form, req.Header)
+			route.Handler(Request{route, pathParams, req, resp})
 			return
 		} else if match && status >= httpStatusCode {
 			httpStatusCode = status
