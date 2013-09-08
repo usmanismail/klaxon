@@ -24,8 +24,8 @@ func Register(path string, method Method, consumes []string, produces []string,
 
 	regRoute := Route{path, method, consumes, produces, handler}
 	for _, route := range routes {
-		var match, _, _, _ = route.matchRoute(regRoute)
-		if match {
+		var match, status, _, _ = route.matchRoute(regRoute)
+		if match && status == http.StatusOK {
 			log.Error("Route %v already registered, ignoring ", regRoute)
 			return false
 		}
