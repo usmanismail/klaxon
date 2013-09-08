@@ -17,7 +17,7 @@ func Register(path string, method Method, consumes []string, produces []string,
 	handler func(Route, map[string]string, url.Values, http.Header)) bool {
 
 	//Trim trailing slash if it exits
-	var trailingSlash, _ = regexp.MatchString(".*/$", path)
+	var trailingSlash, _ = regexp.MatchString(".+/$", path)
 	if trailingSlash {
 		path = path[0 : len(path)-1]
 	}

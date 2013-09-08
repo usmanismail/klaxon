@@ -82,7 +82,7 @@ func (this *Route) matchProduces(route Route) bool {
 //Check if the given route and the current route match.
 func (this *Route) parseUri(route Route) (match bool, pathParams map[string]string) {
 	//Trim trailing slash if it exits
-	var trailingSlash, _ = regexp.MatchString(".*/$", route.Path)
+	var trailingSlash, _ = regexp.MatchString(".+/$", route.Path)
 	if trailingSlash {
 		route.Path = route.Path[0 : len(route.Path)-1]
 	}
