@@ -112,17 +112,18 @@ func (this *Route) parseUri(route Route) (match bool, pathParams map[string]stri
 
 // Check if the given route and the current route match.
 // Returns whether its a match, what the http return code should be and the path parameters
-func (this *Route) matchRoute(route Route) (bool, int, map[string]string) {
+func (this *Route) matchRoute(route Route) (bool, int, map[string]string, string) {
 	var matchUri, pathParams = this.parseUri(route)
-	log.Info("  ->! %v ", this.Path)
 	if !matchUri {
-		return matchUri, http.StatusNotFound, nil
+		return matchUri, http.StatusNotFound, nil, ""
 	} else if this.Method != route.Method {
-		return matchUri, http.StatusMethodNotAllowed, nil
-	} else if !this.matchConsumes(route) || !this.matchProduces(route) {
-		return matchUri, http.StatusUnsupportedMediaType, nil
+		return matchUri, http.StatusMethodNotAllowed, nil, ""
+	} else if !this.matchConsumes(route) {
+		return matchUri, http.StatusUnsupportedMediaType, nil, "Content-Type not supported [" + strings.Join(route.Consumes, ",") + "]. Try one of [" + strings.Join(this.Consumes, ",") + "]"
+	} else if !this.matchProduces(route) {
+		return matchUri, http.StatusUnsupportedMediaType, nil, "Specified Accepts type not supported [" + strings.Join(route.Produces, ",") + "]. Try one of {" + strings.Join(this.Produces, ",") + "]"
 	} else {
-		return matchUri, http.StatusOK, pathParams
+		return matchUri, http.StatusOK, pathParams, ""
 	}
 
 }
