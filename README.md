@@ -5,5 +5,5 @@ klaxon is an alerting dashboard for [Graphite](http://graphite.wikidot.com/) wri
 ## Status
 We are currently in development, we have skeleton servlet handlers setup as well as our data objects and we hope to rest only implementation done fairly soon. Following which we will concentrate on the user interface. 
 
-The tip of this code base is deployed to https://go-klaxon.go-klaxon.appspot.com/ 
+The tip of this code base is deployed to https://go-klaxon.appspot.com/ 
 
