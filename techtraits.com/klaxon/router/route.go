@@ -110,10 +110,20 @@ func (this *Route) parseUri(route Route) (match bool, pathParams map[string]stri
 	return
 }
 
-//Check if the given route and the current route match.
-func (this *Route) matchRoute(route Route) (bool, map[string]string) {
+// Check if the given route and the current route match.
+// Returns whether its a match, what the http return code should be and the path parameters
+func (this *Route) matchRoute(route Route) (bool, int, map[string]string) {
 	var matchUri, pathParams = this.parseUri(route)
-	return ((this.Method == route.Method) && this.matchConsumes(route) && this.matchProduces(route) && matchUri), pathParams
+	log.Info("  ->! %v ", this.Path)
+	if !matchUri {
+		return matchUri, http.StatusNotFound, nil
+	} else if this.Method != route.Method {
+		return matchUri, http.StatusMethodNotAllowed, nil
+	} else if !this.matchConsumes(route) || !this.matchProduces(route) {
+		return matchUri, http.StatusUnsupportedMediaType, nil
+	} else {
+		return matchUri, http.StatusOK, pathParams
+	}
 
 }
 
