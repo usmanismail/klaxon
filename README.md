@@ -7,3 +7,22 @@ We are currently in development, we have skeleton servlet handlers setup as well
 
 The tip of this code base is deployed to https://go-klaxon.appspot.com/ 
 
+## Setup Instructions
+#### Setup GAE o SDK
+* [Download Google App Engine Go SDK](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
+* Unzip the downloaded file to somewhere like /usr/local/
+* Add the unzipped folder to your path
+
+#### Build Klaxon
+	git clone git@github.com:usmanismail/klaxon.git
+	cd klaxon
+	dev_appserver.py klaxkon
+
+#### Deploy Klaxon
+	#Please replace the application tag in app.yaml with out own Application ID
+	scripts/fixFormat.sh
+	appcfg.py update ./
+
+
+## Contributors 
+[Usman Ismail](http://techtraits.com/usman.html)
