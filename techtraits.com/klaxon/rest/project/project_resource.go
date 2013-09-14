@@ -20,7 +20,6 @@ func getProjects(request router.Request) {
 //Create/Update a project
 func postProject(request router.Request) {
 
-	log.Info("Post Project")
 }
 
 //Get a specific project

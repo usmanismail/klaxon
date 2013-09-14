@@ -51,7 +51,7 @@ func handler(resp http.ResponseWriter, req *http.Request) {
 		var match, status, pathParams, message = route.matchRoute(reqRoute)
 		if match && status == http.StatusOK {
 			req.ParseForm()
-			route.Handler(Request{route, pathParams, req, resp})
+			route.Handler(RequestStruct{route, pathParams, req, resp})
 			return
 		} else if match && status >= httpStatusCode {
 			httpStatusCode = status
