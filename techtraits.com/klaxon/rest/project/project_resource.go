@@ -1,13 +1,13 @@
 package project
 
 import (
-	"techtraits.com/klaxon/router"
-	"techtraits.com/log"
-	"net/http"
 	"appengine/datastore"
-	"strings"
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"strings"
+	"techtraits.com/klaxon/router"
+	"techtraits.com/log"
 )
 
 func init() {
@@ -49,7 +49,7 @@ func getProjects(request router.Request) {
 
 //Create/Update a project
 func postProject(request router.Request) {
-	
+
 	project, err := ReadProjectFromJson(request.GetContent())
 	if err != nil {
 		log.Info("error: %v", err)
@@ -63,7 +63,7 @@ func postProject(request router.Request) {
 				http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)	
+			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
@@ -72,7 +72,7 @@ func postProject(request router.Request) {
 func getProject(request router.Request) {
 
 	var projectDTO ProjectDTO
-	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(), 
+	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
 		PROJECT_KEY, request.GetPathParams()["project_id"], 0, nil), &projectDTO)
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
@@ -89,11 +89,11 @@ func getProject(request router.Request) {
 				projectJSON.WriteTo(request.GetResponseWriter())
 			} else {
 				log.Info("Errror %v", err)
-				http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)	
+				http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 			}
 		} else {
 			log.Info("Errror %v", err)
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)	
+			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 		}
 	}
 

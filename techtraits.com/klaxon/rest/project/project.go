@@ -33,7 +33,7 @@ type Project interface {
 	GetName() string
 	GetDescription() string
 	GetConfig() map[string]string
-	WriteJsonToBuffer() (bytes.Buffer, error) 
+	WriteJsonToBuffer() (bytes.Buffer, error)
 	GetDTO() (ProjectDTO, error)
 }
 
@@ -53,7 +53,7 @@ func (this ProjectStruct) GetDTO() (ProjectDTO, error) {
 	var project ProjectDTO
 	project.Name = this.Name
 	project.Description = this.Description
-	
+
 	var err error
 	project.Config, err = json.Marshal(this.Config)
 	return project, err
