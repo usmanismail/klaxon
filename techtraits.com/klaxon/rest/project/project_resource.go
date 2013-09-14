@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	router.Register("/project", router.GET, []string{"application/json"}, nil, getProjects)
-	router.Register("/project/{project_id}", router.GET, []string{"application/json"}, nil, getProjects)
-	router.Register("/project", router.POST, []string{"application/json"}, nil, postProject)
+	router.Register("/rest/project", router.GET, nil, nil, getProjects)
+	router.Register("/rest/project/{project_id}", router.GET, nil, nil, getProjects)
+	router.Register("/rest/project", router.POST, []string{"application/json"}, nil, postProject)
 }
 
 //Get all projects

@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	router.Register("/subscription/{project_id}", router.GET, []string{"application/json"}, nil, getSubscriptions)
-	router.Register("/subscription/{project_id}/{subscription_id}", router.GET, []string{"application/json"}, nil, getSubscription)
-	router.Register("/subscription/{project_id}", router.POST, []string{"application/json"}, nil, postSubscription)
+	router.Register("/rest/subscription/{project_id}", router.GET, nil, nil, getSubscriptions)
+	router.Register("/rest/subscription/{project_id}/{subscription_id}", router.GET, nil, nil, getSubscription)
+	router.Register("/rest/subscription/{project_id}", router.POST, []string{"application/json"}, nil, postSubscription)
 }
 
 //Get all subscriptions for a given project

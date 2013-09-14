@@ -13,9 +13,9 @@ import (
 )
 
 func init() {
-	router.Register("/user/", router.GET, []string{"application/json"}, nil, getUsers)
-	router.Register("/user/{user_id}/", router.GET, []string{"application/json"}, nil, getUser)
-	router.Register("/user/", router.POST, []string{"application/json"}, nil, postUser)
+	router.Register("/rest/user/", router.GET, nil, nil, getUsers)
+	router.Register("/rest/user/{user_id}/", router.GET, nil, nil, getUser)
+	router.Register("/rest/user/", router.POST, []string{"application/json"}, nil, postUser)
 }
 
 func getUsers(request router.Request) {

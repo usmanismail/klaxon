@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	router.Register("/alert/{project_id}", router.GET, []string{"application/json"}, nil, getAlerts)
-	router.Register("/alert/{project_id}/{alert_id}", router.GET, []string{"application/json"}, nil, getAlert)
-	router.Register("/alert/{project_id}", router.POST, []string{"application/json"}, nil, postAlert)
+	router.Register("/rest/alert/{project_id}", router.GET, nil, nil, getAlerts)
+	router.Register("/rest/alert/{project_id}/{alert_id}", router.GET, nil, nil, getAlert)
+	router.Register("/rest/alert/{project_id}", router.POST, []string{"application/json"}, nil, postAlert)
 }
 
 //Get all alerts for a given project
