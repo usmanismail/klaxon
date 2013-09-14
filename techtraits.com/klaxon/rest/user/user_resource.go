@@ -9,7 +9,6 @@ import (
 	"strings"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
-	
 )
 
 func init() {
@@ -19,7 +18,7 @@ func init() {
 }
 
 func getUsers(request router.Request) {
-	
+
 	context := appengine.NewContext(request.HttpRequest)
 	query := datastore.NewQuery(USER_KEY)
 
@@ -33,18 +32,18 @@ func getUsers(request router.Request) {
 		log.Error("Error retriving user: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	} else {
-		//Empty out password has before seding user 
+		//Empty out password has before seding user
 		for _, user := range users {
-    		go func(userObj User) {
-        		userObj.PasswordHash = ""		
-    		}(user)
+			go func(userObj User) {
+				userObj.PasswordHash = ""
+			}(user)
 		}
-		
+
 		var userBytes, _ = json.Marshal(users)
 		var respBuffer bytes.Buffer
 		json.Indent(&respBuffer, userBytes, "", "	")
 		respBuffer.WriteTo(request.ResponseWriter)
-	}	
+	}
 
 }
 
@@ -57,14 +56,12 @@ func postUser(request router.Request) {
 	if err != nil {
 		log.Info("error: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
-	} 
-	 _, err = datastore.Put(context, datastore.NewKey(context, USER_KEY, user.UserName, 0, nil), &user)
-    if err != nil {
+	}
+	_, err = datastore.Put(context, datastore.NewKey(context, USER_KEY, user.UserName, 0, nil), &user)
+	if err != nil {
 		log.Info("error: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
-	} 
-
-	
+	}
 
 }
 
@@ -80,7 +77,7 @@ func getUser(request router.Request) {
 		log.Error("Error retriving user: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	} else {
-		//Empty out password has before seding user 
+		//Empty out password has before seding user
 		user.PasswordHash = ""
 		var userBytes, _ = json.Marshal(user)
 		var respBuffer bytes.Buffer
