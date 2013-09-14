@@ -23,10 +23,7 @@ func getUsers(request router.Request) {
 	var users []User
 	_, err := query.GetAll(request.GetContext(), &users)
 
-	if err != nil && strings.Contains(err.Error(), "no such entity") {
-		log.Error("Error retriving user: %v", err)
-		http.Error(request.GetResponseWriter(), "User not found", http.StatusNotFound)
-	} else if err != nil {
+	if err != nil {
 		log.Error("Error retriving user: %v", err)
 		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 	} else {
@@ -50,7 +47,7 @@ func postUser(request router.Request) {
 	err := json.Unmarshal(request.GetContent(), &user)
 	if err != nil {
 		log.Info("error: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+		http.Error(request.GetResponseWriter(), err.Error(), http.StatusBadRequest)
 	}
 	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), USER_KEY, user.UserName, 0, nil), &user)
 	if err != nil {
