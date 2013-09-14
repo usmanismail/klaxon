@@ -8,7 +8,7 @@ We are currently in development, we have skeleton servlet handlers setup as well
 The tip of this code base is deployed to https://go-klaxon.appspot.com/ 
 
 ## Setup Instructions
-#### Setup GAE o SDK
+#### Setup GAE go SDK
 * [Download Google App Engine Go SDK](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go)
 * Unzip the downloaded file to somewhere like /usr/local/
 * Add the unzipped folder to your path
