@@ -9,29 +9,63 @@ import (
 	"strings"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
+	
 )
 
 func init() {
 	router.Register("/user/", router.GET, []string{"application/json"}, nil, getUsers)
 	router.Register("/user/{user_id}/", router.GET, []string{"application/json"}, nil, getUser)
 	router.Register("/user/", router.POST, []string{"application/json"}, nil, postUser)
-	router.Register("/user/{user_id}/projects/{project_id}", router.GET, []string{"application/json"}, nil, getUserProjects)
 }
 
 func getUsers(request router.Request) {
+	
+	context := appengine.NewContext(request.HttpRequest)
+	query := datastore.NewQuery(USER_KEY)
+
+	var users []User
+	_, err := query.GetAll(context, &users)
+
+	if err != nil && strings.Contains(err.Error(), "no such entity") {
+		log.Error("Error retriving user: %v", err)
+		http.Error(request.ResponseWriter, "User not found", http.StatusNotFound)
+	} else if err != nil {
+		log.Error("Error retriving user: %v", err)
+		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
+	} else {
+		//Empty out password has before seding user 
+		for _, user := range users {
+    		go func(userObj User) {
+        		userObj.PasswordHash = ""		
+    		}(user)
+		}
+		
+		var userBytes, _ = json.Marshal(users)
+		var respBuffer bytes.Buffer
+		json.Indent(&respBuffer, userBytes, "", "	")
+		respBuffer.WriteTo(request.ResponseWriter)
+	}	
 
 }
 
 func postUser(request router.Request) {
-
+	var user User
 	context := appengine.NewContext(request.HttpRequest)
-	user := User{"usman", []string{"cascade"}, "hash!!!!!!!", true}
-	_, err := datastore.Put(context, datastore.NewKey(context, USER_KEY, user.UserName, 0, nil), &user)
-
+	content := make([]byte, request.HttpRequest.ContentLength)
+	request.HttpRequest.Body.Read(content)
+	err := json.Unmarshal(content, &user)
 	if err != nil {
-		log.Error("Error saving user: %v", err)
+		log.Info("error: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
-	}
+	} 
+	 _, err = datastore.Put(context, datastore.NewKey(context, USER_KEY, user.UserName, 0, nil), &user)
+    if err != nil {
+		log.Info("error: %v", err)
+		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
+	} 
+
+	
+
 }
 
 func getUser(request router.Request) {
@@ -46,13 +80,11 @@ func getUser(request router.Request) {
 		log.Error("Error retriving user: %v", err)
 		http.Error(request.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	} else {
+		//Empty out password has before seding user 
+		user.PasswordHash = ""
 		var userBytes, _ = json.Marshal(user)
 		var respBuffer bytes.Buffer
 		json.Indent(&respBuffer, userBytes, "", "	")
 		respBuffer.WriteTo(request.ResponseWriter)
 	}
-}
-
-func getUserProjects(request router.Request) {
-
 }
