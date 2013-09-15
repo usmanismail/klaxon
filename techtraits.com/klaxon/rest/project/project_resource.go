@@ -25,7 +25,7 @@ func getProjects(request router.Request) {
 	_, err := query.GetAll(request.GetContext(), &projectDTOs)
 
 	if err != nil {
-		log.Error("Error retriving user: %v", err)
+		log.Error("Error retriving project: %v", err)
 		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
 	} else {
 		//Convert to Projects
