@@ -1,6 +1,8 @@
 package router
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,7 +15,7 @@ var routes []Route
 // Registers a new handler
 // Will check that it does not conflict with a route that is already configured
 func Register(path string, method Method, consumes []string, produces []string,
-	handler func(Request)) bool {
+	handler func(Request) (int, []byte)) bool {
 
 	//Trim trailing slash if it exits
 	var trailingSlash, _ = regexp.MatchString(".+/$", path)
@@ -51,72 +53,27 @@ func handler(resp http.ResponseWriter, req *http.Request) {
 		var match, status, pathParams, message = route.matchRoute(reqRoute)
 		if match && status == http.StatusOK {
 			req.ParseForm()
-			route.Handler(RequestStruct{route, pathParams, req, resp})
+			statusCode, content := route.Handler(RequestStruct{route, pathParams, req, resp})
+			handleResponse(resp, statusCode, content)
 			return
 		} else if match && status >= httpStatusCode {
 			httpStatusCode = status
 			errorMessage = message
 		}
 	}
-	handleError(resp, httpStatusCode, errorMessage)
+	handleResponse(resp, httpStatusCode, []byte(errorMessage))
 }
 
-func handleError(resp http.ResponseWriter, httpStatusCode int, message string) {
+func handleResponse(resp http.ResponseWriter, httpStatusCode int, message []byte) {
 
-	if message == "" {
-		switch httpStatusCode {
-		case http.StatusBadRequest:
-			message = "Bad Request"
-		case http.StatusUnauthorized:
-			message = "Unauthorized"
-		case http.StatusPaymentRequired:
-			message = "Payment Required"
-		case http.StatusForbidden:
-			message = "Forbidden"
-		case http.StatusNotFound:
-			message = "Resource not found"
-		case http.StatusMethodNotAllowed:
-			message = "Method not allowed"
-		case http.StatusNotAcceptable:
-			message = "Request not accepted"
-		case http.StatusProxyAuthRequired:
-			message = "Proxy auth required"
-		case http.StatusRequestTimeout:
-			message = "Request time out"
-		case http.StatusConflict:
-			message = "Conflict"
-		case http.StatusGone:
-			message = "Gone"
-		case http.StatusLengthRequired:
-			message = "Length Required"
-		case http.StatusPreconditionFailed:
-			message = "Preconditions failed"
-		case http.StatusRequestEntityTooLarge:
-			message = "Entity too large"
-		case http.StatusRequestURITooLong:
-			message = "URI too long"
-		case http.StatusUnsupportedMediaType:
-			message = "Unsupported media type"
-		case http.StatusRequestedRangeNotSatisfiable:
-			message = "Requested range not satisfiable"
-		case http.StatusExpectationFailed:
-			message = "Expectation failed"
-		case http.StatusTeapot:
-			message = "Unused"
-		case http.StatusInternalServerError:
-			message = "Internal Server Error"
-		case http.StatusNotImplemented:
-			message = "Not implemented"
-		case http.StatusBadGateway:
-			message = "Bad gateway"
-		case http.StatusServiceUnavailable:
-			message = "Service unavialable"
-		case http.StatusGatewayTimeout:
-			message = "Gateway timeout"
-		case http.StatusHTTPVersionNotSupported:
-			message = "Http version not supported"
-		}
+	if message == nil {
+		message = []byte(http.StatusText(httpStatusCode))
 	}
 
-	http.Error(resp, message, httpStatusCode)
+	if httpStatusCode == http.StatusOK {
+		io.Copy(resp, bytes.NewReader(message))
+	} else {
+		http.Error(resp, string(message), httpStatusCode)
+	}
+
 }

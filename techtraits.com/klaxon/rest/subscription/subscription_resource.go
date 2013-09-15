@@ -2,7 +2,6 @@ package subscription
 
 import (
 	"appengine/datastore"
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -17,60 +16,69 @@ func init() {
 }
 
 //Get all subscriptions for a given project
-func getSubscriptions(request router.Request) {
+func getSubscriptions(request router.Request) (int, []byte) {
 
 	query := datastore.NewQuery(SUBSCRIPTION_KEY).Filter("Project =", request.GetPathParams()["project_id"])
-	var subscriptions []Subscription
+	subscriptions := make([]Subscription, 0)
 	_, err := query.GetAll(request.GetContext(), &subscriptions)
 
 	if err != nil {
 		log.Error("Error retriving Subscriptions: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
-	} else {
-		var subscriptionBytes, _ = json.Marshal(subscriptions)
-		var respBuffer bytes.Buffer
-		json.Indent(&respBuffer, subscriptionBytes, "", "	")
-		respBuffer.WriteTo(request.GetResponseWriter())
+		return http.StatusInternalServerError, []byte(err.Error())
 	}
+
+	subscriptionBytes, err := json.MarshalIndent(subscriptions, "", "	")
+
+	if err != nil {
+		log.Error("Error retriving Subscriptions: %v", err)
+		return http.StatusInternalServerError, []byte(err.Error())
+	}
+
+	return http.StatusOK, subscriptionBytes
+
 }
 
 //Create/Update an subscription for the given project
-func postSubscription(request router.Request) {
+func postSubscription(request router.Request) (int, []byte) {
 
-	subscription, err := ReadSubscriptionFromJson(request.GetContent())
+	var subscription Subscription
+	err := json.Unmarshal(request.GetContent(), &subscription)
 	if err != nil {
 		log.Info("error: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusBadRequest)
-	} else {
-		subscription.Project = request.GetPathParams()["project_id"]
-		_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), SUBSCRIPTION_KEY,
-			subscription.Project+"-"+subscription.Name, 0, nil), &subscription)
-		if err != nil {
-			log.Info("error: %v", err)
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
-		}
+		return http.StatusBadRequest, []byte(err.Error())
 	}
+
+	subscription.Project = request.GetPathParams()["project_id"]
+	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), SUBSCRIPTION_KEY,
+		subscription.Project+"-"+subscription.Name, 0, nil), &subscription)
+
+	if err != nil {
+		log.Info("error: %v", err)
+		return http.StatusInternalServerError, []byte(err.Error())
+	}
+
+	return http.StatusOK, nil
+
 }
 
 //Get a specific subscription for a project
-func getSubscription(request router.Request) {
+func getSubscription(request router.Request) (int, []byte) {
 	var subscription Subscription
 	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
 		SUBSCRIPTION_KEY, request.GetPathParams()["project_id"]+"-"+request.GetPathParams()["subscription_id"], 0, nil), &subscription)
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
-		log.Error("Error retriving Subsciption: %v", err)
-		http.Error(request.GetResponseWriter(), "Subsciption not found", http.StatusNotFound)
+		return http.StatusNotFound, []byte("Subscription not found")
 	} else if err != nil {
 		log.Error("Error retriving Subsciption: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
-		var subscriptionJSON, err = subscription.WriteJsonToBuffer()
+		subscriptionBytes, err := json.MarshalIndent(subscription, "", "	")
 		if err == nil {
-			subscriptionJSON.WriteTo(request.GetResponseWriter())
+			return http.StatusOK, subscriptionBytes
 		} else {
 			log.Info("Errror %v", err)
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+			return http.StatusInternalServerError, []byte(err.Error())
 		}
 
 	}

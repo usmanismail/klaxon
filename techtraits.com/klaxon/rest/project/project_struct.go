@@ -1,7 +1,6 @@
 package project
 
 import (
-	"bytes"
 	"encoding/json"
 )
 
@@ -36,14 +35,4 @@ func (this ProjectStruct) GetDTO() (ProjectDTO, error) {
 	var err error
 	project.Config, err = json.Marshal(this.Config)
 	return project, err
-}
-
-func (this ProjectStruct) WriteJsonToBuffer() (bytes.Buffer, error) {
-	var projectBytes, err = json.Marshal(this)
-	var respBuffer bytes.Buffer
-	if err == nil {
-		json.Indent(&respBuffer, projectBytes, "", "	")
-	}
-	return respBuffer, err
-
 }

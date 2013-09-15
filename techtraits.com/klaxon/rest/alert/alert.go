@@ -1,10 +1,5 @@
 package alert
 
-import (
-	"bytes"
-	"encoding/json"
-)
-
 const ALERT_KEY string = "ALERT"
 
 type Alert struct {
@@ -31,20 +26,4 @@ type Alert struct {
 	// if ErrorLevel is higher than WarnLevel than alert is fired when value exceedes ErrorLevel
 	// If ErrorLevel is lower than warnLevel than alert is fired when value goes below ErrorLevel
 	ErrorLevel float64
-}
-
-func ReadAlertFromJson(alertBytes []byte) (Alert, error) {
-	var alert Alert
-	err := json.Unmarshal(alertBytes, &alert)
-	return alert, err
-}
-
-func (this Alert) WriteJsonToBuffer() (bytes.Buffer, error) {
-	var alertBytes, err = json.Marshal(this)
-	var respBuffer bytes.Buffer
-	if err == nil {
-		json.Indent(&respBuffer, alertBytes, "", "	")
-	}
-	return respBuffer, err
-
 }

@@ -2,7 +2,6 @@ package alert
 
 import (
 	"appengine/datastore"
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -17,60 +16,66 @@ func init() {
 }
 
 //Get all alerts for a given project
-func getAlerts(request router.Request) {
+func getAlerts(request router.Request) (int, []byte) {
 
 	query := datastore.NewQuery(ALERT_KEY).Filter("Project =", request.GetPathParams()["project_id"])
-	var alerts []Alert
+	alerts := make([]Alert, 0)
 	_, err := query.GetAll(request.GetContext(), &alerts)
 
 	if err != nil {
 		log.Error("Error retriving alerts: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
-		var alertBytes, _ = json.Marshal(alerts)
-		var respBuffer bytes.Buffer
-		json.Indent(&respBuffer, alertBytes, "", "	")
-		respBuffer.WriteTo(request.GetResponseWriter())
+		alertBytes, err := json.MarshalIndent(alerts, "", "	")
+		if err != nil {
+			log.Error("Error retriving Alerts: %v", err)
+			return http.StatusInternalServerError, []byte(err.Error())
+		}
+		return http.StatusOK, alertBytes
 	}
 }
 
 //Create/Update an alert for the given project
-func postAlert(request router.Request) {
+func postAlert(request router.Request) (int, []byte) {
 
-	alert, err := ReadAlertFromJson(request.GetContent())
+	var alert Alert
+	err := json.Unmarshal(request.GetContent(), &alert)
 	if err != nil {
 		log.Info("error: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusBadRequest)
-	} else {
-		alert.Project = request.GetPathParams()["project_id"]
-		_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), ALERT_KEY,
-			alert.Project+"-"+alert.Name, 0, nil), &alert)
-		if err != nil {
-			log.Info("error: %v", err)
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
-		}
+		return http.StatusBadRequest, []byte(err.Error())
 	}
+
+	alert.Project = request.GetPathParams()["project_id"]
+	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), ALERT_KEY,
+		alert.Project+"-"+alert.Name, 0, nil), &alert)
+	if err != nil {
+		log.Info("error: %v", err)
+		return http.StatusInternalServerError, []byte(err.Error())
+	}
+
+	return http.StatusOK, nil
+
 }
 
 //Get a specific alert for a project
-func getAlert(request router.Request) {
+func getAlert(request router.Request) (int, []byte) {
 	var alert Alert
 	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
 		ALERT_KEY, request.GetPathParams()["project_id"]+"-"+request.GetPathParams()["alert_id"], 0, nil), &alert)
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
 		log.Error("Error retriving Alert: %v", err)
-		http.Error(request.GetResponseWriter(), "Alert not found", http.StatusNotFound)
+		return http.StatusNotFound, []byte("Alert not found")
 	} else if err != nil {
 		log.Error("Error retriving alert: %v", err)
-		http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+		return http.StatusBadRequest, []byte(err.Error())
 	} else {
-		var alertJSON, err = alert.WriteJsonToBuffer()
+		var alertJSON, err = json.MarshalIndent(alert, "", "	")
 		if err == nil {
-			alertJSON.WriteTo(request.GetResponseWriter())
+			return http.StatusOK, alertJSON
 		} else {
 			log.Info("Errror %v", err)
-			http.Error(request.GetResponseWriter(), err.Error(), http.StatusInternalServerError)
+			return http.StatusBadRequest, []byte(err.Error())
 		}
 	}
 }

@@ -37,7 +37,7 @@ type Route struct {
 	Produces []string
 
 	//The Handler function to be called when a route is matched.
-	Handler func(request Request)
+	Handler func(request Request) (int, []byte)
 }
 
 //Check if the given route and the current route match.
