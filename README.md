@@ -19,7 +19,7 @@ The tip of this code base is deployed to https://go-klaxon.appspot.com/
 	dev_appserver.py klaxkon
 
 #### Deploy Klaxon
-	#Please replace the application tag in app.yaml with out own Application ID
+	#Please replace the application tag in app.yaml with your own Application ID
 	scripts/fixFormat.sh
 	appcfg.py update ./
 
