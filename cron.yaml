@@ -1,0 +1,5 @@
+cron:
+- description: Continuos tick 
+  url: /rest/internal/tick
+  # Will be set much lower in real application
+  schedule: every 10 mins
