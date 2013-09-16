@@ -1,7 +1,6 @@
 package check
 
 import (
-
 	"net/http"
 	"techtraits.com/klaxon/router"
 )
