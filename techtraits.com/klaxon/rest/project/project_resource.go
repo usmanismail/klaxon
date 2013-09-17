@@ -24,7 +24,7 @@ func getProjects(request router.Request) (int, []byte) {
 	_, err := query.GetAll(request.GetContext(), &projectDTOs)
 
 	if err != nil {
-		log.Error("Error retriving project: %v", err)
+		log.Errorf(request.GetContext(), "Errorf retriving project: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		//Convert to Projects
@@ -40,7 +40,7 @@ func getProjects(request router.Request) (int, []byte) {
 
 		projectBytes, err := json.MarshalIndent(projects, "", "	")
 		if err != nil {
-			log.Error("Error retriving Projects: %v", err)
+			log.Errorf(request.GetContext(), "Errorf retriving Projects: %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 		}
 		return http.StatusOK, projectBytes
@@ -53,7 +53,7 @@ func postProject(request router.Request) (int, []byte) {
 	var project ProjectStruct
 	err := json.Unmarshal(request.GetContent(), &project)
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Infof(request.GetContext(), "error: %v", err)
 		return http.StatusBadRequest, []byte(err.Error())
 	}
 
@@ -65,7 +65,7 @@ func postProject(request router.Request) (int, []byte) {
 
 	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), PROJECT_KEY, project.GetName(), 0, nil), &projectDTO)
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Infof(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	}
 
@@ -80,22 +80,22 @@ func getProject(request router.Request) (int, []byte) {
 		PROJECT_KEY, request.GetPathParams()["project_id"], 0, nil), &projectDTO)
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
-		log.Error("Error retriving Project: %v", err)
+		log.Errorf(request.GetContext(), "Errorf retriving Project: %v", err)
 		return http.StatusNotFound, []byte("Project Not Found")
 	} else if err != nil {
-		log.Error("Error retriving project: %v", err)
+		log.Errorf(request.GetContext(), "Errorf retriving project: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		project, err := projectDTO.GetProject()
 		if err != nil {
-			log.Info("Errror %v", err)
+			log.Infof(request.GetContext(), "Errror %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 
 		}
 
 		projectJSON, err := json.MarshalIndent(project, "", "	")
 		if err != nil {
-			log.Info("Errror %v", err)
+			log.Infof(request.GetContext(), "Errror %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 
 		}

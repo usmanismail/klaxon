@@ -23,7 +23,7 @@ func getUsers(request router.Request) (int, []byte) {
 	_, err := query.GetAll(request.GetContext(), &users)
 
 	if err != nil {
-		log.Error("Error retriving user: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving user: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		//Empty out password hash before seding user
@@ -37,7 +37,7 @@ func getUsers(request router.Request) (int, []byte) {
 		if err == nil {
 			return http.StatusOK, userBytes
 		} else {
-			log.Info("Errror %v", err)
+			log.Errorf(request.GetContext(), "Errror %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 		}
 	}
@@ -48,13 +48,13 @@ func postUser(request router.Request) (int, []byte) {
 	var user User
 	err := json.Unmarshal(request.GetContent(), &user)
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Errorf(request.GetContext(), "error: %v", err)
 		return http.StatusBadRequest, []byte(err.Error())
 	}
 	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(),
 		USER_KEY, user.UserName, 0, nil), &user)
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Errorf(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	}
 
@@ -68,10 +68,10 @@ func getUser(request router.Request) (int, []byte) {
 	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
 		USER_KEY, request.GetPathParams()["user_id"], 0, nil), &user)
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
-		log.Error("Error retriving user: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving user: %v", err)
 		return http.StatusInternalServerError, []byte("User not found")
 	} else if err != nil {
-		log.Error("Error retriving user: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving user: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		//Empty out password has before seding user
@@ -80,7 +80,7 @@ func getUser(request router.Request) (int, []byte) {
 		if err == nil {
 			return http.StatusOK, userBytes
 		} else {
-			log.Info("Errror %v", err)
+			log.Errorf(request.GetContext(), "Errror %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 		}
 

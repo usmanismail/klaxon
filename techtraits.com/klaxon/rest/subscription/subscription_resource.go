@@ -23,14 +23,14 @@ func getSubscriptions(request router.Request) (int, []byte) {
 	_, err := query.GetAll(request.GetContext(), &subscriptions)
 
 	if err != nil {
-		log.Error("Error retriving Subscriptions: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving Subscriptions: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	}
 
 	subscriptionBytes, err := json.MarshalIndent(subscriptions, "", "	")
 
 	if err != nil {
-		log.Error("Error retriving Subscriptions: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving Subscriptions: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	}
 
@@ -44,7 +44,7 @@ func postSubscription(request router.Request) (int, []byte) {
 	var subscription Subscription
 	err := json.Unmarshal(request.GetContent(), &subscription)
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Errorf(request.GetContext(), "error: %v", err)
 		return http.StatusBadRequest, []byte(err.Error())
 	}
 
@@ -53,7 +53,7 @@ func postSubscription(request router.Request) (int, []byte) {
 		subscription.Project+"-"+subscription.Name, 0, nil), &subscription)
 
 	if err != nil {
-		log.Info("error: %v", err)
+		log.Errorf(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	}
 
@@ -70,14 +70,14 @@ func getSubscription(request router.Request) (int, []byte) {
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
 		return http.StatusNotFound, []byte("Subscription not found")
 	} else if err != nil {
-		log.Error("Error retriving Subsciption: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving Subsciption: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		subscriptionBytes, err := json.MarshalIndent(subscription, "", "	")
 		if err == nil {
 			return http.StatusOK, subscriptionBytes
 		} else {
-			log.Info("Errror %v", err)
+			log.Errorf(request.GetContext(), "Errror %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 		}
 
