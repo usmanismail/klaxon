@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"appengine/datastore"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -17,11 +16,7 @@ func init() {
 
 //Get all alerts for a given project
 func getAlerts(request router.Request) (int, []byte) {
-
-	query := datastore.NewQuery(ALERT_KEY).Filter("Project =", request.GetPathParams()["project_id"])
-	alerts := make([]Alert, 0)
-	_, err := query.GetAll(request.GetContext(), &alerts)
-
+	alerts, err := GetAlertsFromGAE(request.GetPathParams()["project_id"], request.GetContext())
 	if err != nil {
 		log.Errorf(request.GetContext(), "Error retriving alerts: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
@@ -46,8 +41,7 @@ func postAlert(request router.Request) (int, []byte) {
 	}
 
 	alert.Project = request.GetPathParams()["project_id"]
-	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), ALERT_KEY,
-		alert.Project+"-"+alert.Name, 0, nil), &alert)
+	err = PostAlertToGAE(alert, request.GetContext())
 	if err != nil {
 		log.Infof(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
@@ -59,9 +53,8 @@ func postAlert(request router.Request) (int, []byte) {
 
 //Get a specific alert for a project
 func getAlert(request router.Request) (int, []byte) {
-	var alert Alert
-	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
-		ALERT_KEY, request.GetPathParams()["project_id"]+"-"+request.GetPathParams()["alert_id"], 0, nil), &alert)
+
+	alert, err := GetAlertFromGAE(request.GetPathParams()["project_id"], request.GetPathParams()["alert_id"], request.GetContext())
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
 		log.Errorf(request.GetContext(), "Error retriving Alert: %v", err)
