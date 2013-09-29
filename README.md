@@ -15,8 +15,7 @@ The tip of this code base is deployed to https://go-klaxon.appspot.com/
 
 #### Build Klaxon
 	git clone git@github.com:usmanismail/klaxon.git
-	cd klaxon
-	dev_appserver.py klaxkon
+	dev_appserver.py ./klaxon/src
 
 #### Deploy Klaxon
 	#Please replace the application tag in app.yaml with your own Application ID
