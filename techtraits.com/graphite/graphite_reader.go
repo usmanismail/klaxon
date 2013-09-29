@@ -36,6 +36,7 @@ func MakeGraphiteReader(baseUrlStr string, context appengine.Context) (GraphiteR
 func (this GraphiteHandler) ReadValue(target string) (float64, error) {
 
 	var value float64
+
 	graphiteUrl, err := url.Parse(this.BaseUrl.String() + "?target=" + target + "&format=csv&from=" + this.LookBack)
 
 	if err == nil {

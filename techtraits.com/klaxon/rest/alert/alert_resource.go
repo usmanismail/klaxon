@@ -41,7 +41,7 @@ func postAlert(request router.Request) (int, []byte) {
 	}
 
 	alert.Project = request.GetPathParams()["project_id"]
-	err = PostAlertToGAE(alert, request.GetContext())
+	err = SaveAlertToGAE(alert, request.GetContext())
 	if err != nil {
 		log.Infof(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
