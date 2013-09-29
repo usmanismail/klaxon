@@ -45,7 +45,7 @@ type Alert struct {
 	PreviousState ALERT_STATE `json:"-"`
 }
 
-// Checkis if there is a change to the alert status. This functions returns if the status has changed as
+// Checks if there is a change to the alert status. This functions returns if the status has changed as
 // well as what the previous and current values of the status are.
 func (this *Alert) CheckAlertStatusChange(value float64) (changed bool, previousState ALERT_STATE, currentState ALERT_STATE) {
 
