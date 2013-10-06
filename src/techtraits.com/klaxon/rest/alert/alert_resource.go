@@ -40,6 +40,7 @@ func postAlert(request router.Request) (int, []byte) {
 		return http.StatusBadRequest, []byte(err.Error())
 	}
 
+	//TODO Check Project Exists
 	alert.Project = request.GetPathParams()["project_id"]
 	err = SaveAlertToGAE(alert, request.GetContext())
 	if err != nil {

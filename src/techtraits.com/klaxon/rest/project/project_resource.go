@@ -74,22 +74,22 @@ func getProject(request router.Request) (int, []byte) {
 	projectDTO, err := GetProjectDTOFromGAE(request.GetPathParams()["project_id"], request.GetContext())
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
-		log.Errorf(request.GetContext(), "Errorf retriving Project: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving Project: %v", err)
 		return http.StatusNotFound, []byte("Project Not Found")
 	} else if err != nil {
-		log.Errorf(request.GetContext(), "Errorf retriving project: %v", err)
+		log.Errorf(request.GetContext(), "Error retriving project: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		project, err := projectDTO.GetProject()
 		if err != nil {
-			log.Infof(request.GetContext(), "Errror %v", err)
+			log.Infof(request.GetContext(), "Error %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 
 		}
 
 		projectJSON, err := json.MarshalIndent(project, "", "	")
 		if err != nil {
-			log.Infof(request.GetContext(), "Errror %v", err)
+			log.Infof(request.GetContext(), "Error %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
 
 		}
