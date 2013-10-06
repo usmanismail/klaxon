@@ -1,7 +1,6 @@
 package project
 
 import (
-	"appengine/datastore"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -18,10 +17,7 @@ func init() {
 //Get all projects
 func getProjects(request router.Request) (int, []byte) {
 
-	query := datastore.NewQuery(PROJECT_KEY)
-
-	projectDTOs := make([]ProjectDTO, 0)
-	_, err := query.GetAll(request.GetContext(), &projectDTOs)
+	projectDTOs, err := GetProjectDTOsFromGAE(request.GetContext())
 
 	if err != nil {
 		log.Errorf(request.GetContext(), "Errorf retriving project: %v", err)
@@ -62,8 +58,8 @@ func postProject(request router.Request) (int, []byte) {
 		return http.StatusInternalServerError, []byte(err.Error())
 
 	}
+	err = SaveProjectDTOToGAE(projectDTO, request.GetContext())
 
-	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), PROJECT_KEY, project.GetName(), 0, nil), &projectDTO)
 	if err != nil {
 		log.Infof(request.GetContext(), "error: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
@@ -75,9 +71,7 @@ func postProject(request router.Request) (int, []byte) {
 //Get a specific project
 func getProject(request router.Request) (int, []byte) {
 
-	var projectDTO ProjectDTO
-	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
-		PROJECT_KEY, request.GetPathParams()["project_id"], 0, nil), &projectDTO)
+	projectDTO, err := GetProjectDTOFromGAE(request.GetPathParams()["project_id"], request.GetContext())
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
 		log.Errorf(request.GetContext(), "Errorf retriving Project: %v", err)
