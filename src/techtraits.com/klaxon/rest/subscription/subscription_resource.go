@@ -1,7 +1,6 @@
 package subscription
 
 import (
-	"appengine/datastore"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -18,9 +17,7 @@ func init() {
 //Get all subscriptions for a given project
 func getSubscriptions(request router.Request) (int, []byte) {
 
-	query := datastore.NewQuery(SUBSCRIPTION_KEY).Filter("Project =", request.GetPathParams()["project_id"])
-	subscriptions := make([]Subscription, 0)
-	_, err := query.GetAll(request.GetContext(), &subscriptions)
+	subscriptions, err := GetSubscriptionsFromGAE(request.GetPathParams()["project_id"], request.GetContext())
 
 	if err != nil {
 		log.Errorf(request.GetContext(), "Error retriving Subscriptions: %v", err)
@@ -49,8 +46,7 @@ func postSubscription(request router.Request) (int, []byte) {
 	}
 
 	subscription.Project = request.GetPathParams()["project_id"]
-	_, err = datastore.Put(request.GetContext(), datastore.NewKey(request.GetContext(), SUBSCRIPTION_KEY,
-		subscription.Project+"-"+subscription.Name, 0, nil), &subscription)
+	err = SaveSubscriptionToGAE(subscription, request.GetContext())
 
 	if err != nil {
 		log.Errorf(request.GetContext(), "error: %v", err)
@@ -63,9 +59,8 @@ func postSubscription(request router.Request) (int, []byte) {
 
 //Get a specific subscription for a project
 func getSubscription(request router.Request) (int, []byte) {
-	var subscription Subscription
-	err := datastore.Get(request.GetContext(), datastore.NewKey(request.GetContext(),
-		SUBSCRIPTION_KEY, request.GetPathParams()["project_id"]+"-"+request.GetPathParams()["subscription_id"], 0, nil), &subscription)
+
+	subscription, err := GetSubscriptionFromGAE(request.GetPathParams()["project_id"], request.GetPathParams()["subscription_id"], request.GetContext())
 
 	if err != nil && strings.Contains(err.Error(), "no such entity") {
 		return http.StatusNotFound, []byte("Subscription not found")
