@@ -21,18 +21,21 @@ type GraphiteHandler struct {
 	GraphiteClient *http.Client
 }
 
-func MakeGraphiteReader(baseUrlStr string, context appengine.Context) (GraphiteReader, error) {
+//Make a graphite reader which looks reads metrics from graphite instance(s) referenced by BaseUrl,
+//and uses the last n seconds to determine find value, where 'n' is equal to lookback
+func MakeGraphiteReader(baseUrlStr string, lookback string, context appengine.Context) (GraphiteReader, error) {
 
 	baseUrl, err := url.Parse(baseUrlStr + "/render")
 
 	var reader GraphiteHandler
 	if err == nil {
-		reader = GraphiteHandler{baseUrl, "-300sec", urlfetch.Client(context)}
+		reader = GraphiteHandler{baseUrl, "-" + lookback + "sec", urlfetch.Client(context)}
 	}
 
 	return reader, err
 }
 
+//Read the metric value specified by target
 func (this GraphiteHandler) ReadValue(target string) (float64, error) {
 
 	var value float64

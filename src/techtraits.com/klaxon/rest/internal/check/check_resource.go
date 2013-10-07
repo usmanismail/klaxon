@@ -3,6 +3,7 @@ package check
 import (
 	"appengine"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"techtraits.com/graphite"
@@ -30,33 +31,50 @@ func checkProject(request router.Request) (int, []byte) {
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		projectObj, err := projectDto.GetProject()
-		if err != nil {
-			log.Warnf(request.GetContext(), "Error polling graphite %v ", err.Error())
-			return http.StatusInternalServerError, []byte(err.Error())
-		} else if projectObj.GetConfig()["graphite.baseurl"] == "" {
-			log.Warnf(request.GetContext(), "Error polling graphite, property graphite.base missing for project ")
-			return http.StatusInternalServerError, []byte("Property graphite.base missing for project")
+		status, err := verifyProject(projectObj, err, request.GetContext())
+		if err == nil {
+			return processAlerts(projectObj, request.GetContext())
 		} else {
-			return processAlerts(request.GetPathParams()["project_id"], projectObj.GetConfig()["graphite.baseurl"], request.GetContext())
+			return status, []byte(err.Error())
 		}
 	}
 
 }
 
-func processAlerts(projectId string, graphiteUrl string, context appengine.Context) (int, []byte) {
+func verifyProject(projectObj project.Project, err error, context appengine.Context) (int, error) {
+	if err != nil {
+		log.Warnf(context, "Error polling graphite %v ", err.Error())
+		return http.StatusInternalServerError, err
+	} else if projectObj.GetConfig()["graphite.baseurl"] == "" {
+		log.Warnf(context, "Error polling graphite, property graphite.base missing for project ")
+		return http.StatusInternalServerError, errors.New("Property graphite.base missing for project")
+	} else if projectObj.GetConfig()["graphite.lookback"] == "" {
+		log.Warnf(context, "Error polling graphite, property graphite.lookback missing for project ")
+		return http.StatusInternalServerError, errors.New("Property graphite.lookback missing for project")
+	} else {
+		return 0, nil
+	}
+}
+
+func processAlerts(projectObj project.Project, context appengine.Context) (int, []byte) {
 
 	//Get Alerts for Project
-	alerts, err := alert.GetAlertsFromGAE(projectId, context)
+	alerts, err := alert.GetAlertsFromGAE(projectObj.GetName(), context)
 	if err != nil {
 		log.Errorf(context, "Error retriving alerts: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
 		alertChecks := make([]alert.Check, 0)
-		graphiteReader, _ := graphite.MakeGraphiteReader(graphiteUrl, context)
+		graphiteReader, _ := graphite.MakeGraphiteReader(projectObj.GetConfig()["graphite.baseurl"],
+			projectObj.GetConfig()["graphite.lookback"], context)
+
 		for _, projectAlert := range alerts {
-			alertChecks = append(alertChecks, processAlert(projectAlert, context, graphiteReader, alertChecks))
+			alertCheck := processAlert(projectAlert, context, graphiteReader, alertChecks)
+			alertChecks = append(alertChecks, alertCheck)
 		}
+
 		alertBytes, err := json.MarshalIndent(alertChecks, "", "	")
+
 		if err != nil {
 			log.Errorf(context, "Error marshalling response %v", err)
 			return http.StatusInternalServerError, []byte(err.Error())
@@ -65,17 +83,19 @@ func processAlerts(projectId string, graphiteUrl string, context appengine.Conte
 	}
 }
 
-func processAlert(projectAlert alert.Alert, context appengine.Context, graphiteReader graphite.GraphiteReader, alertChecks []alert.Check) alert.Check {
+func processAlert(projectAlert alert.Alert, context appengine.Context,
+	graphiteReader graphite.GraphiteReader, alertChecks []alert.Check) alert.Check {
+
 	value, err := graphiteReader.ReadValue(projectAlert.Target)
 	if err != nil {
 		log.Errorf(context, "Error processing Alert: %v", err)
 		saveChangeIfNeeded(projectAlert, projectAlert.PreviousState != alert.UNKNOWN, alert.UNKNOWN, context)
-		return alert.Check{projectAlert.Project, projectAlert.Name, projectAlert.PreviousState, alert.UNKNOWN, projectAlert.PreviousState != alert.UNKNOWN, 0}
+		return alert.Check{projectAlert.Project, projectAlert.Name, projectAlert.PreviousState,
+			alert.UNKNOWN, projectAlert.PreviousState != alert.UNKNOWN, 0}
 
 	} else {
 		changed, previous, current := projectAlert.CheckAlertStatusChange(value)
 		saveChangeIfNeeded(projectAlert, changed, current, context)
-		log.Info("Send Alert %v changed", projectAlert.Name, value, previous, current, changed)
 		return alert.Check{projectAlert.Project, projectAlert.Name, previous, current, changed, value}
 	}
 }
