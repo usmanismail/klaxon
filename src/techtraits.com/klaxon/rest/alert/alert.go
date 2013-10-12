@@ -83,6 +83,13 @@ func (this *Alert) checkLowBad(value float64) ALERT_STATE {
 	}
 }
 
+func (this *Alert) SaveChangeIfNeeded(changed bool, current ALERT_STATE, context appengine.Context) {
+	if changed {
+		this.PreviousState = current
+		SaveAlertToGAE(*this, context)
+	}
+}
+
 func GetAlertsFromGAE(projectId string, context appengine.Context) ([]Alert, error) {
 	query := datastore.NewQuery(ALERT_KEY).Filter("Project =", projectId)
 	alerts := make([]Alert, 0)

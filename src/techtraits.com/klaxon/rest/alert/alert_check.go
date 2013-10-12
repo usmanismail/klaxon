@@ -13,3 +13,17 @@ type Check struct {
 
 	Value float64
 }
+
+func GetStateString(state ALERT_STATE) string {
+
+	switch state {
+	default:
+		return "Unknown"
+	case 1:
+		return "Ok"
+	case 2:
+		return "Warn"
+	case 3:
+		return "Error"
+	}
+}

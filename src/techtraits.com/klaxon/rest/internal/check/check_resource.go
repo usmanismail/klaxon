@@ -2,7 +2,6 @@ package check
 
 import (
 	"appengine"
-	"appengine/mail"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -125,45 +124,20 @@ func processAlert(projectAlert alert.Alert, context appengine.Context,
 	graphiteReader graphite.GraphiteReader, subscriptions []subscription.Subscription,
 	alertChecks []alert.Check) alert.Check {
 
+	log.Infof(context, "Sending Graphite request too %s", projectAlert.Target)
 	value, err := graphiteReader.ReadValue(projectAlert.Target)
 	if err != nil {
 		log.Errorf(context, "Error processing Alert: %v", err)
-		saveChangeIfNeeded(projectAlert, projectAlert.PreviousState != alert.UNKNOWN, alert.UNKNOWN, context)
+		projectAlert.SaveChangeIfNeeded(projectAlert.PreviousState != alert.UNKNOWN, alert.UNKNOWN, context)
 		return alert.Check{projectAlert.Project, projectAlert.Name, projectAlert.PreviousState,
 			alert.UNKNOWN, projectAlert.PreviousState != alert.UNKNOWN, 0}
 
 	} else {
 		changed, previous, current := projectAlert.CheckAlertStatusChange(value)
-		saveChangeIfNeeded(projectAlert, changed, current, context)
+		projectAlert.SaveChangeIfNeeded(changed, current, context)
 		check := alert.Check{projectAlert.Project, projectAlert.Name, previous, current, changed, value}
-		triggerSubscriptionsIfNeeded(check, subscriptions, context)
+		subscription.TriggerSubscriptionsIfNeeded(check, subscriptions, context)
 		return check
-	}
-}
-
-func saveChangeIfNeeded(projectAlert alert.Alert, changed bool, current alert.ALERT_STATE, context appengine.Context) {
-	if changed {
-		projectAlert.PreviousState = current
-		alert.SaveAlertToGAE(projectAlert, context)
-	}
-}
-
-func triggerSubscriptionsIfNeeded(check alert.Check, subscriptions []subscription.Subscription,
-	context appengine.Context) {
-	for _, subscription := range subscriptions {
-		log.Infof(context, "Firing Subscrption for check %v", subscription, check)
-
-		//url := createConfirmationURL(r)
-		msg := &mail.Message{
-			Sender:  "Klaxon <0xfffffff@gmail.com>",
-			To:      []string{subscription.Target},
-			Subject: "Alert Triggered",
-			Body:    "Alert Triggered",
-		}
-		if err := mail.Send(context, msg); err != nil {
-			log.Errorf(context, "Couldn't send email: %v", err)
-		}
-
 	}
 }
 
