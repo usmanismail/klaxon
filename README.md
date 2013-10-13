@@ -19,8 +19,9 @@ The tip of this code base is deployed to https://go-klaxon.appspot.com/
 
 #### Deploy Klaxon
 	#Please replace the application tag in app.yaml with your own Application ID
+	cd klaxon
 	scripts/fixFormat.sh
-	appcfg.py update ./
+	appcfg.py update ./src
 
 
 ## Contributors 

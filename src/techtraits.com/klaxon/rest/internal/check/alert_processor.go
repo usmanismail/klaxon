@@ -11,6 +11,17 @@ import (
 	"techtraits.com/log"
 )
 
+func getAlerts(projectId string, context appengine.Context) ([]alert.Alert, int, error) {
+	//Get Alerts for Project
+	alerts, err := alert.GetAlertsFromGAE(projectId, context)
+	if err != nil {
+		log.Errorf(context, "Error retriving alerts: %v", err)
+		return nil, http.StatusInternalServerError, err
+	} else {
+		return alerts, http.StatusOK, nil
+	}
+}
+
 func processAlerts(projectObj project.Project, alerts []alert.Alert,
 	subscriptions []subscription.Subscription, context appengine.Context) (int, []byte) {
 
