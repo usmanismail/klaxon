@@ -9,13 +9,21 @@ import (
 )
 
 func init() {
-	router.Register("/rest/project", router.GET, nil, nil, getProjects)
+
+	//Get All Projects (Admin Only), All My Projects for others
+	router.Register("/rest/project", router.GET, nil, nil, getAllProjects)
+
+	//Get Project (TODO Permission if only if the user has access or is admin)
 	router.Register("/rest/project/{project_id}", router.GET, nil, nil, getProject)
-	router.Register("/rest/project", router.POST, []string{"application/json"}, nil, postProject)
+
+	//Update Project (TODO Permission if only if the user has access or is admin)
+	router.Register("/rest/project", router.POST, []string{"application/json"}, nil, updateProject)
 }
 
 //Get all projects
-func getProjects(request router.Request) (int, []byte) {
+//TODO: Check for Admin to return all
+//TODO: If not admin only return current users projects
+func getAllProjects(request router.Request) (int, []byte) {
 
 	projectDTOs, err := GetProjectDTOsFromGAE(request.GetContext())
 
@@ -44,7 +52,10 @@ func getProjects(request router.Request) (int, []byte) {
 }
 
 //Create/Update a project
-func postProject(request router.Request) (int, []byte) {
+//TODO: Check Admin/User Permissions
+//TODO: Check required config present
+//TODO: If create add to user project list
+func updateProject(request router.Request) (int, []byte) {
 
 	var project ProjectStruct
 	err := json.Unmarshal(request.GetContent(), &project)

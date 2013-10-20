@@ -1,5 +1,10 @@
+* Clean up User Management
 * Implement delete for all rest resources
 * Implement put for all rest resources
+* Validate Project exists for all resources
+	* Subscription
+	* Alert
+	* User
 * Make post for resources a smart post which does not erase old data
 * Add "enabled" field to project resource 
 * Add authentication

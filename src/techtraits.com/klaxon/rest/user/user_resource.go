@@ -1,38 +1,37 @@
 package user
 
 import (
-	"appengine/datastore"
 	"encoding/json"
 	"net/http"
-	"strings"
+	"techtraits.com/bcrypt"
 	"techtraits.com/klaxon/router"
 	"techtraits.com/log"
 )
 
 func init() {
+	//Get All Users (Admin Only)
 	router.Register("/rest/user/", router.GET, nil, nil, getUsers)
-	router.Register("/rest/user/{user_id}/", router.GET, nil, nil, getUser)
-	router.Register("/rest/user/", router.POST, []string{"application/json"}, nil, postUser)
+
+	//Register User
+	router.Register("/rest/user/", router.PUT, []string{"application/json"}, nil, registerUser)
+
+	//Get One User (Admin Only)
+	//router.Register("/rest/user/{user_id}/", router.GET, nil, nil, getUser)
+
+	//Update User (Admin Only)
+	//router.Register("/rest/user/", router.PUT, []string{"application/json"}, nil, updateUser)
+
+	// Get Me  --TODO
+	// Change Password --TODO
 }
 
 func getUsers(request router.Request) (int, []byte) {
-
-	query := datastore.NewQuery(USER_KEY)
-
-	users := make([]User, 0)
-	_, err := query.GetAll(request.GetContext(), &users)
+	users, err := GetUsersFromGAE(request.GetContext())
 
 	if err != nil {
 		log.Errorf(request.GetContext(), "Error retriving user: %v", err)
 		return http.StatusInternalServerError, []byte(err.Error())
 	} else {
-		//Empty out password hash before seding user
-		for _, user := range users {
-			go func(userObj User) {
-				userObj.PasswordHash = ""
-			}(user)
-		}
-
 		userBytes, err := json.MarshalIndent(users, "", "	")
 		if err == nil {
 			return http.StatusOK, userBytes
@@ -41,10 +40,42 @@ func getUsers(request router.Request) (int, []byte) {
 			return http.StatusInternalServerError, []byte(err.Error())
 		}
 	}
-
 }
 
-func postUser(request router.Request) (int, []byte) {
+func registerUser(request router.Request) (int, []byte) {
+	var registration UserResgistration
+	err := json.Unmarshal(request.GetContent(), &registration)
+
+	//Check for correct desrialization
+	if err != nil {
+		log.Errorf(request.GetContext(), "error: %v", err)
+		return http.StatusBadRequest, []byte(err.Error())
+	}
+
+	//check if username already exists
+	if IsUsernameAvailable(registration.UserName, request.GetContext()) {
+
+		// generate a random salt with default rounds of complexity
+		salt, _ := bcrypt.Salt()
+
+		// hash and verify a password with random salt
+		hash, _ := bcrypt.Hash(registration.Password)
+
+		var user = UserData{registration.UserName, nil, salt, hash}
+		err = SaveUserToGAE(user, request.GetContext())
+		if err != nil {
+			log.Errorf(request.GetContext(), "error: %v", err)
+			return http.StatusInternalServerError, []byte(err.Error())
+		} else {
+			return http.StatusOK, nil
+		}
+	} else {
+		return http.StatusConflict, []byte("Username not avaiable")
+	}
+}
+
+/*
+func updateUser(request router.Request) (int, []byte) {
 	var user User
 	err := json.Unmarshal(request.GetContent(), &user)
 	if err != nil {
@@ -86,3 +117,4 @@ func getUser(request router.Request) (int, []byte) {
 
 	}
 }
+*/
